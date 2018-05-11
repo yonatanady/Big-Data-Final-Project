@@ -1,0 +1,490 @@
+---
+title: "Big Data Final Project"
+author: "Yonatan Ady"
+date: "May 11, 2018"
+output: 
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.width = 12, fig.height = 8, fig.path = 'Figures/')
+```
+
+```{r}
+library(tidyverse)
+library(gridExtra)
+library(knitr)
+library(plotly)
+```
+
+```{r load data}
+ne_commercial_landing <- read.csv("Data/NRS 568 Project - All States.csv", header = TRUE, stringsAsFactors = FALSE,
+         sep = ",")
+```
+
+```{r format number}
+"formatColumns" <-
+  function(data, digits)
+  {
+    "%,%" <- function(x,y)paste(x,y,sep="")
+    nms <- names(data)
+    nc <- ncol(data)
+    nd <- length(digits)
+    if(nc!=nd) 
+      stop("Argument 'digits' must be vector of length " %,% 
+             nc %,% ", the number of columns in 'data'.")
+    out <- as.data.frame(sapply(1:nc, 
+                                FUN=function(x, d, Y)
+                                  format(Y[,x], digits=d[x]), Y=tbl, d=digits))
+    if(!is.null(nms)) names(out) <- nms
+    out
+  }
+```
+
+```{r cleaning data}
+ne_commercial_landing_clean <- ne_commercial_landing %>% 
+  select(State, Year, Species, Metric.Tons, Pounds, X.) %>%
+  filter(!State == "Total", !State == "")
+```
+
+```{r change name of column}
+colnames(ne_commercial_landing_clean)[6] <- "Unit.Price"
+```
+
+```{r specify data for CT}
+ct_landing <- ne_commercial_landing_clean %>%
+  filter(!State == "RI", !State == "MA", !State == "ME")
+```
+
+```{r}
+ct_landing_ton <- ct_landing %>%
+  select(Year, Species, Metric.Tons)
+```
+
+```{r}
+ct_landing_ton$Year <- as.factor(ct_landing_ton$Year)
+```
+## Comparison Between 10 Key Species for Commercial Fishing in 4 States of New England Area
+
+This report will be comparing landing data for 10 key species in commercial fishing during 2000 - 2016 in 4 state of New Engalnd area. The purpose is to see is there any differences between total catch of each species in each State.
+
+In 2006, New England commercial fishermen received $953 million for their harvest (701 million pounds). The ex-vessel value of shellfish landings (237 million pounds) was $769 million, with lobster and sea scallops accounting for almost 70% of total landings revenue
+
+
+## 1. Connecticut
+
+Connecticut has a rich heritage of commercial fishing, from the offshore fleet in Stonington and New London, to Long Island Sound lobster boats spanning the coast to Greenwich. Commercial fishing makes an important contribution to Connecticut’s economy. In 2013, Connecticut commercial fishermen landed over 7 million pounds (live weight) of finfish, lobster, scallops, crabs and squid worth $14 million.
+
+
+```{r}
+ggplot(ct_landing_ton, aes(x = Year, y = Metric.Tons, fill = Species)) + 
+  geom_bar(stat = "identity") + facet_wrap(~Species, scales = "free_y") +
+  theme_linedraw() + theme(legend.position = "right") +
+  labs(title = "Connecticut commercial landing (2000 - 2016)", 
+       x = "Year", y = "in Metric Tons") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(angle = 68, hjust = 1, size = 9)) +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+```
+
+```{r}
+ri_landing <- ne_commercial_landing_clean %>%
+  filter(!State == "CT", !State == "MA", !State == "ME")
+```
+
+```{r}
+ri_landing_ton <- ri_landing %>%
+  select(Year, Species, Metric.Tons)
+```
+
+```{r}
+ri_landing_ton$Year <- as.factor(ri_landing_ton$Year)
+```
+## 2. Rhode Island
+
+Rhode Island has a diverse and dynamic commercial fishing and seafood industry. These characteristics are evident in the spectrum of species harvested, processed, and distributed. Geographically located at the northern boundary of the Mid-Atlantic area and the southern portion of New England, the Rhode Island commercial fishing and seafood industries have taken advantage of this positioning to effectively target a broad range of species common to each region.
+
+
+```{r}
+ggplot(ri_landing_ton, aes(x = Year, y = Metric.Tons, fill = Species)) + 
+  geom_bar(stat = "identity") + facet_wrap(~Species, scales = "free_y") +
+  theme_linedraw() + theme(legend.position = "right") +
+  labs(title = "Rhode Island commercial landing (2000 - 2016)", 
+       x = "Year", y = "in Metric Tons") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(angle = 68, hjust = 1, size = 9)) +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+```
+
+```{r}
+ma_landing <- ne_commercial_landing_clean %>%
+  filter(!State == "CT", !State == "RI", !State == "ME")
+```
+
+```{r}
+ma_landing_ton <- ma_landing %>%
+  select(Year, Species, Metric.Tons)
+```
+
+```{r}
+ma_landing_ton$Year <- as.factor(ma_landing_ton$Year)
+```
+## 3. Massachusetts
+
+federal report shows that Massachusetts’ commercial fishing industry directly or indirectly supports an estimated 83,000 jobs in the state, generating the third-highest economic impact of any state.
+
+Massachusetts ranked below only California and Florida in terms of jobs supported by the industry and the estimated revenue directly or indirectly supported by the industry, according to a report released on Tuesday by the National Oceanic and Atmospheric Administration.
+
+The agency estimates that the commercial fishing industry supported about $4.4 billion in revenue in Massachusetts. The report, which is the first of its kind by the federal agency, relies on data for fish landings from 1997 through 2006.
+
+The amount of money paid to fishermen at the docks for catches in Massachusetts rose 95 percent over that 10-year period to $437 million in 2006, largely because of a nearly fivefold increase in sea scallop revenue in the state.
+
+
+```{r}
+ggplot(ma_landing_ton, aes(x = Year, y = Metric.Tons, fill = Species)) + 
+  geom_bar(stat = "identity") + facet_wrap(~Species, scales = "free_y") +
+  theme_linedraw() + theme(legend.position = "right") +
+  labs(title = "Massachusetts commercial landing (2000 - 2016)", 
+       x = "Year", y = "in Metric Tons") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(angle = 68, hjust = 1, size = 9)) +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+```
+
+```{r}
+me_landing <- ne_commercial_landing_clean %>%
+  filter(!State == "CT", !State == "RI", !State == "MA")
+```
+
+```{r}
+me_landing_ton <- me_landing %>%
+  select(Year, Species, Metric.Tons)
+```
+
+```{r}
+me_landing_ton$Year <- as.factor(me_landing_ton$Year)
+```
+## 4. Maine
+
+Commercial fisheries have a long history in the Gulf of Maine, beginning
+with the cod and haddock fishery that was established prior to colonization
+of North America by Europeans.Various commercial fisheries
+developed in the region during early European colonization of North America
+and have remained economically and socially important. In 2009, commercial
+fisheries in the Gulf of Maine landed 505 thousand metric tons (mt)2 of seafood
+with a dockside value of $114.5 million3 (NMFS 2010, DFO landings data).
+
+
+```{r}
+ggplot(me_landing_ton, aes(x = Year, y = Metric.Tons, fill = Species)) + 
+  geom_bar(stat = "identity") + facet_wrap(~Species, scales = "free_y") +
+  theme_linedraw() + theme(legend.position = "right") +
+  labs(title = "Maine commercial landing (2000 - 2016)", 
+       x = "Year", y = "in Metric Tons") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(angle = 68, hjust = 1, size = 9)) +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+```
+## Comparison Between Each State Based On Each Species
+
+## 1. Atlantic Cod
+
+Although populations are well below target levels, U.S. wild-caught Atlantic cod is still a smart seafood choice because it is sustainably managed under a rebuilding plan that allows limited harvest by U.S. fishermen.
+
+The texture of Atlantic cod, Cod has large flakes. It's less firm than haddock.
+
+https://www.fishwatch.gov/profiles/atlantic-cod
+
+
+```{r}
+cod_atlantic <- ne_commercial_landing_clean %>%
+  filter(!Species == "FLOUNDER, WINTER", !Species == "GOOSEFISH",
+         !Species == "LOBSTER, AMERICAN", !Species == "MACKEREL, ATLANTIC",
+         !Species == "MENHADEN", !Species == "SCALLOP, SEA", 
+         !Species == "SEA BASS, BLACK", !Species == "SQUID, LONGFIN",
+         !Species == "SQUID, NORTHERN SHORTFIN")
+
+ggplot(cod_atlantic, aes(x = Year, y = Metric.Tons, fill = State)) + 
+  geom_bar(stat = "identity") +
+  theme_linedraw() + theme(legend.position = "right") +
+  labs(title = "Comparison landing Between Each State for Atlantic Cod", 
+       x = "Year", y = "in Metric Tons") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(angle = 68, hjust = 1, size = 9)) +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+```
+
+
+## 2. Winter Flounder
+
+U.S. wild-caught winter flounder is a smart seafood choice because it is sustainably managed and responsibly harvested under U.S. regulations.
+
+The texture of winter flounder is Lean, boneless, and flaky.
+
+(https://www.fishwatch.gov/profiles/winter-flounder)
+
+
+```{r}
+flounder_winter <- ne_commercial_landing_clean %>%
+  filter(!Species == "COD, ATLANTIC", !Species == "GOOSEFISH",
+         !Species == "LOBSTER, AMERICAN", !Species == "MACKEREL, ATLANTIC",
+         !Species == "MENHADEN", !Species == "SCALLOP, SEA", 
+         !Species == "SEA BASS, BLACK", !Species == "SQUID, LONGFIN",
+         !Species == "SQUID, NORTHERN SHORTFIN")
+
+ggplot(flounder_winter, aes(x = Year, y = Metric.Tons, fill = State)) + 
+  geom_bar(stat = "identity") +
+  theme_linedraw() + theme(legend.position = "right") +
+  labs(title = "Comparison landing Between Each State for Winter Flounder", 
+       x = "Year", y = "in Metric Tons") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(angle = 68, hjust = 1, size = 9)) +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+```
+
+
+## 3. Goosefish
+
+U.S. wild-caught monkfish (Goosefish) is a smart seafood choice because it is sustainably managed and responsibly harvested under U.S. regulations.
+
+The tail meat is firm, dense, and relatively boneless. The meat is not flaky and has a texture similar to lobster meat. Raw monkfish is covered with a blue-gray membrane, which should be removed before cooking. If left on, the membrane will shrink, and the meat will curl and become tough.
+
+(https://www.fishwatch.gov/profiles/monkfish)
+
+
+```{r}
+Goosefish <- ne_commercial_landing_clean %>%
+  filter(!Species == "COD, ATLANTIC", !Species == "FLOUNDER, WINTER",
+         !Species == "LOBSTER, AMERICAN", !Species == "MACKEREL, ATLANTIC",
+         !Species == "MENHADEN", !Species == "SCALLOP, SEA", 
+         !Species == "SEA BASS, BLACK", !Species == "SQUID, LONGFIN",
+         !Species == "SQUID, NORTHERN SHORTFIN")
+
+ggplot(Goosefish, aes(x = Year, y = Metric.Tons, fill = State)) + 
+  geom_bar(stat = "identity") +
+  theme_linedraw() + theme(legend.position = "right") +
+  labs(title = "Comparison landing Between Each State for Goosefish", 
+       x = "Year", y = "in Metric Tons") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(angle = 68, hjust = 1, size = 9)) +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+```
+
+
+## 4. American Lobster
+
+U.S. wild-caught American lobster is a smart seafood choice because it is sustainably managed and responsibly harvested under U.S. regulations.
+
+The meat is firm and somewhat fibrous. The tail meat is firmer than the meat from the claws.
+
+(https://www.fishwatch.gov/profiles/american-lobster)
+
+
+```{r}
+lobster <- ne_commercial_landing_clean %>%
+  filter(!Species == "COD, ATLANTIC", !Species == "FLOUNDER, WINTER",
+         !Species == "GOOSEFISH", !Species == "MACKEREL, ATLANTIC",
+         !Species == "MENHADEN", !Species == "SCALLOP, SEA", 
+         !Species == "SEA BASS, BLACK", !Species == "SQUID, LONGFIN",
+         !Species == "SQUID, NORTHERN SHORTFIN")
+
+ggplot(lobster, aes(x = Year, y = Metric.Tons, fill = State)) + 
+  geom_bar(stat = "identity") +
+  theme_linedraw() + theme(legend.position = "right") +
+  labs(title = "Comparison landing Between Each State for American Lobster", 
+       x = "Year", y = "in Metric Tons") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(angle = 68, hjust = 1, size = 9)) +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+```
+
+
+## 5. Atlantic Mackerel
+
+U.S. wild-caught Atlantic mackerel is a smart seafood choice because it is sustainably managed and responsibly harvested under U.S. regulations.
+
+Mackerel is high in omega-3 fatty acids and is an excellent source of selenium, niacin, and vitamins B6 and B12.
+
+(https://www.fishwatch.gov/profiles/atlantic-mackerel)
+
+
+```{r}
+mackerel <- ne_commercial_landing_clean %>%
+  filter(!Species == "COD, ATLANTIC", !Species == "FLOUNDER, WINTER",
+         !Species == "GOOSEFISH", !Species == "LOBSTER, AMERICAN",
+         !Species == "MENHADEN", !Species == "SCALLOP, SEA", 
+         !Species == "SEA BASS, BLACK", !Species == "SQUID, LONGFIN",
+         !Species == "SQUID, NORTHERN SHORTFIN")
+
+ggplot(mackerel, aes(x = Year, y = Metric.Tons, fill = State)) + 
+  geom_bar(stat = "identity") +
+  theme_linedraw() + theme(legend.position = "right") +
+  labs(title = "Comparison landing Between Each State for Atlantic Mackerel", 
+       x = "Year", y = "in Metric Tons") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(angle = 68, hjust = 1, size = 9)) +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+```
+
+
+## 6. Menhaden
+
+Menhaden, Brevoortia tyrannus, is, without a doubt, the single most important fish in the western Atlantic. This oily filter-feeder swims in schools so large that they block the sun from penetrating the water’s surface as it regulates ocean health.
+
+The Narragansett called them munnawhatteaug. Colonists called them poghaden, bony-fish, whitefish, pogy, mossbunker, fat-bat. Perhaps most endearingly, menhaden were called bug-heads, thanks to the parasitic isopod that was often found in place of their tongues. They have also been called “the most important fish in the sea“.
+
+No matter what you call them, Atlantic menhaden, Brevoortia tyrannus, is the little morning tyrant, and they are magnificent.
+
+(http://www.southernfriedscience.com/six-reasons-why-menhaden-are-the-greatest-fish-we-ever-fished/)
+
+
+```{r}
+menhaden <- ne_commercial_landing_clean %>%
+  filter(!Species == "COD, ATLANTIC", !Species == "FLOUNDER, WINTER",
+         !Species == "GOOSEFISH", !Species == "LOBSTER, AMERICAN",
+         !Species == "MACKEREL, ATLANTIC", !Species == "SCALLOP, SEA", 
+         !Species == "SEA BASS, BLACK", !Species == "SQUID, LONGFIN",
+         !Species == "SQUID, NORTHERN SHORTFIN")
+
+ggplot(menhaden, aes(x = Year, y = Metric.Tons, fill = State)) + 
+  geom_bar(stat = "identity") +
+  theme_linedraw() + theme(legend.position = "right") +
+  labs(title = "Comparison landing Between Each State for Menhaden", 
+       x = "Year", y = "in Metric Tons") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(angle = 68, hjust = 1, size = 9)) +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+```
+
+
+## 7. Sea Scallop
+
+U.S. wild-caught Atlantic sea scallop is a smart seafood choice because it is sustainably managed and responsibly harvested under U.S. regulations.
+
+Raw scallops are shiny and creamy white, sometimes with an orange or pinkish tint (a natural variation that does not affect taste or quality). High-quality scallops have an ivory translucence and should keep their shape.
+
+Scallops are a good low-fat source of protein and are high in selenium and B vitamins.
+
+(https://www.fishwatch.gov/profiles/atlantic-sea-scallop)
+
+
+```{r}
+scallop <- ne_commercial_landing_clean %>%
+  filter(!Species == "COD, ATLANTIC", !Species == "FLOUNDER, WINTER",
+         !Species == "GOOSEFISH", !Species == "LOBSTER, AMERICAN",
+         !Species == "MACKEREL, ATLANTIC", !Species == "MENHADEN", 
+         !Species == "SEA BASS, BLACK", !Species == "SQUID, LONGFIN",
+         !Species == "SQUID, NORTHERN SHORTFIN")
+
+ggplot(scallop, aes(x = Year, y = Metric.Tons, fill = State)) + 
+  geom_bar(stat = "identity") +
+  theme_linedraw() + theme(legend.position = "right") +
+  labs(title = "Comparison landing Between Each State for Sea Scallop", 
+       x = "Year", y = "in Metric Tons") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(angle = 68, hjust = 1, size = 9)) +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+```
+
+
+## 8. Black Sea Bass
+
+U.S. wild-caught black sea bass is a smart seafood choice because it is sustainably managed and responsibly harvested under U.S. regulations.
+
+Uncooked meat should be sparkling white and translucent. The meat is snow white when cooked.
+
+U.S. wild-caught from Massachusetts to the west coast of Florida. The United States is the only source for this species.
+
+(https://www.fishwatch.gov/profiles/black-sea-bass)
+
+
+```{r}
+seabass <- ne_commercial_landing_clean %>%
+  filter(!Species == "COD, ATLANTIC", !Species == "FLOUNDER, WINTER",
+         !Species == "GOOSEFISH", !Species == "LOBSTER, AMERICAN",
+         !Species == "MACKEREL, ATLANTIC", !Species == "MENHADEN", 
+         !Species == "SCALLOP, SEA", !Species == "SQUID, LONGFIN",
+         !Species == "SQUID, NORTHERN SHORTFIN")
+
+ggplot(seabass, aes(x = Year, y = Metric.Tons, fill = State)) + 
+  geom_bar(stat = "identity") +
+  theme_linedraw() + theme(legend.position = "right") +
+  labs(title = "Comparison landing Between Each State for Black Sea Bass", 
+       x = "Year", y = "in Metric Tons") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(angle = 68, hjust = 1, size = 9)) +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+```
+
+
+## 9. Longfin Squid
+
+U.S. wild-caught longfin squid is a smart seafood choice because it is sustainably managed and responsibly harvested under U.S. regulations.
+
+Raw squid is ivory colored with a speckled membrane. Cooked squid is opaque white.
+
+Squid are an excellent source of selenium, riboflavin, and vitamin B12.
+
+(https://www.fishwatch.gov/profiles/longfin-squid)
+
+
+```{r}
+squid_longfin <- ne_commercial_landing_clean %>%
+  filter(!Species == "COD, ATLANTIC", !Species == "FLOUNDER, WINTER",
+         !Species == "GOOSEFISH", !Species == "LOBSTER, AMERICAN",
+         !Species == "MACKEREL, ATLANTIC", !Species == "MENHADEN", 
+         !Species == "SCALLOP, SEA", !Species == "SEA BASS, BLACK",
+         !Species == "SQUID, NORTHERN SHORTFIN")
+
+ggplot(squid_longfin, aes(x = Year, y = Metric.Tons, fill = State)) + 
+  geom_bar(stat = "identity") +
+  theme_linedraw() + theme(legend.position = "right") +
+  labs(title = "Comparison landing Between Each State for Longfin Squid", 
+       x = "Year", y = "in Metric Tons") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(angle = 68, hjust = 1, size = 9)) +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+```
+
+
+## 10. Shortfin Squid
+
+Shortfin Squid are found on the offshore continental shelf and slope waters of the northwestern Atlantic, from Florida to Labrador. They grow quickly and reproduce at a young age, which helps their resistance to fishing pressure. They appear to be at a healthy level of abundance, but it varies from year to year due their short life span and sensitivity to environmental conditions. To protect against overfishing, managers limit the number of boats allowed in the fishery. Chef Barton Seaver says, “This classic seafood has a unique toothsome texture and a delicate mild flavor. Great on the grill, or for sautéing and poaching.”
+Criterion
+
+(http://safinacenter.org/documents/2012/03/squid-shortfin-ika-full-species-report-2.pdf/)
+```{r}
+squid_shortfin <- ne_commercial_landing_clean %>%
+  filter(!Species == "COD, ATLANTIC", !Species == "FLOUNDER, WINTER",
+         !Species == "GOOSEFISH", !Species == "LOBSTER, AMERICAN",
+         !Species == "MACKEREL, ATLANTIC", !Species == "MENHADEN", 
+         !Species == "SCALLOP, SEA", !Species == "SEA BASS, BLACK",
+         !Species == "SQUID, LONGFIN")
+
+ggplot(squid_shortfin, aes(x = Year, y = Metric.Tons, fill = State)) + 
+  geom_bar(stat = "identity") +
+  theme_linedraw() + theme(legend.position = "right") +
+  labs(title = "Comparison landing Between Each State for Northern Shortfin Squid", 
+       x = "Year", y = "in Metric Tons") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(angle = 68, hjust = 1, size = 9)) +
+  theme(axis.text.y = element_text(hjust = 1, size = 9))
+
+```
+
+
+## Comparison all States Base On Species
+
+
+```{r}
+ggplot(ne_commercial_landing_clean, aes(x = Year, y = Metric.Tons)) + 
+  geom_line(aes(color = Species)) + theme_classic() + 
+  theme(legend.position = "right") +
+  labs(title = "Comparison all States Base On Species", x = "Year", 
+       y = "In Metric Tons (g)", color = "Species") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) + 
+  theme(axis.text.x = element_text(size = 9)) +
+  theme(axis.text.y = element_text(size = 9)) 
+```
+
